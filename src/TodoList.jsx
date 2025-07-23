@@ -10,7 +10,7 @@ function TodoList() {
   return (
     <div>
       {todos.map((todo) => (
-        <TodoListItem key={todo.id} title={todo.title} />
+        <TodoListItem key={todo.id} todo={todo} />
       ))}
     </div>
   );
