@@ -8,11 +8,11 @@ const todos = [
 
 function TodoList() {
   return (
-    <div>
+    <ul>
       {todos.map((todo) => (
         <TodoListItem key={todo.id} todo={todo} />
       ))}
-    </div>
+    </ul>
   );
 }
 
