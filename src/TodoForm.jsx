@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useState } from 'react';
 
 function TodoForm({ onAddTodo }) {
-  const [workingTodoTitle, setWorkingTodoTitle] = useState('');
+  const [workingTodoTitle, setWorkingTodoTitle] = useState(''); //input title
 
   const todoTitleInput = useRef(null);
 
@@ -17,6 +17,7 @@ function TodoForm({ onAddTodo }) {
   }
 
   return (
+    //task added
     <form onSubmit={handleAddTodo}>
       <label htmlFor="todoTitle">Todo</label>
       <input

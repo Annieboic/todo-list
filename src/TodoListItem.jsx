@@ -2,7 +2,7 @@ function TodoListItem({ todo, onCompleteTodo }) {
   return (
     <li>
       <form>
-        <input
+        <input //input for checkbox
           type="checkbox"
           checked={todo.isCompleted}
           onChange={() => onCompleteTodo(todo.id)}
