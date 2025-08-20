@@ -1,12 +1,26 @@
 import TodoListItem from './TodoListItem';
 
-function TodoList({ todoList }) {
+function TodoList({ todoList, onCompleteTodo }) {
+  const filteredTodoList = todoList.filter(
+    (todo) => todo.isCompleted === false
+  ); //filtered to all not completed tasks
+
   return (
-    <ul>
-      {todoList.map((todo) => (
-        <TodoListItem key={todo.id} todo={todo} />
-      ))}
-    </ul>
+    <div>
+      {filteredTodoList.length < 1 ? (
+        <p>Add todo above to get started</p> //no tasks - show paragraph
+      ) : (
+        <ul>
+          {filteredTodoList.map((todo) => (
+            <TodoListItem
+              key={todo.id}
+              todo={todo}
+              onCompleteTodo={onCompleteTodo}
+            /> //or show filtered one
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
