@@ -7,7 +7,7 @@ function TodoList({ todoList, onCompleteTodo }) {
 
   return (
     <div>
-      {todoList.length === 0 ? (
+      {filteredTodoList.length < 1 ? (
         <p>Add todo above to get started</p> //no tasks - show paragraph
       ) : (
         <ul>
