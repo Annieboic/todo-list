@@ -8,10 +8,10 @@ function TodoForm({ onAddTodo }) {
 
   function handleAddTodo(event) {
     event.preventDefault();
-    //console.dir(event.target.title);
+    //console.dir(event.target.title); // prevent refreshing
 
     onAddTodo(workingTodoTitle);
-    setWorkingTodoTitle('');
+    setWorkingTodoTitle(''); //clean input after entering task
 
     todoTitleInput.current.focus(); //focus the input again, for fast typing
   }
@@ -28,6 +28,7 @@ function TodoForm({ onAddTodo }) {
         value={workingTodoTitle} //Connect Form Input to Component State
         onChange={(event) => setWorkingTodoTitle(event.target.value)}
       />
+
       <button type="submit" disabled={workingTodoTitle.trim() === ''}>
         Add Todo
       </button>
