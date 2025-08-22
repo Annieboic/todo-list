@@ -1,6 +1,6 @@
 import TodoListItem from './TodoListItem';
 
-function TodoList({ todoList, onCompleteTodo }) {
+function TodoList({ todoList, onCompleteTodo, onUpdateTodo }) {
   const filteredTodoList = todoList.filter(
     (todo) => todo.isCompleted === false
   ); //filtered to all not completed tasks
@@ -16,6 +16,7 @@ function TodoList({ todoList, onCompleteTodo }) {
               key={todo.id}
               todo={todo}
               onCompleteTodo={onCompleteTodo}
+              onUpdateTodo={onUpdateTodo}
             /> //or show filtered one
           ))}
         </ul>
