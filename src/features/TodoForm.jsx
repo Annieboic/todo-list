@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { useState } from 'react';
 import TextInputWithLabel from '../shared/TextInputWithLabel';
 
-function TodoForm({ onAddTodo }) {
+function TodoForm({ onAddTodo, isSaving, setIsSaving }) {
   const [workingTodoTitle, setWorkingTodoTitle] = useState(''); //input title
 
   const todoTitleInput = useRef(null);
@@ -11,7 +11,10 @@ function TodoForm({ onAddTodo }) {
     event.preventDefault();
     //console.dir(event.target.title); // prevent refreshing
 
-    onAddTodo(workingTodoTitle);
+    onAddTodo({
+      title: workingTodoTitle,
+      isCompleted: false,
+    });
     setWorkingTodoTitle(''); //clean input after entering task
 
     todoTitleInput.current.focus(); //focus the input again, for fast typing
@@ -29,7 +32,7 @@ function TodoForm({ onAddTodo }) {
       />
 
       <button type="submit" disabled={workingTodoTitle.trim() === ''}>
-        Add Todo
+        {isSaving ? 'Saving...' : 'Add Todo'}
       </button>
     </form>
   );
