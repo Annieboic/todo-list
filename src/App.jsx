@@ -2,6 +2,17 @@ import './App.css';
 import TodoList from './features/TodoList/TodoList';
 import TodoForm from './features/TodoForm';
 import { useEffect, useState } from 'react';
+import TodosViewForm from './features/TodosViewForm';
+
+function encodeUrl({ sortField, sortDirection, queryString }) {
+  const url = `https://api.airtable.com/v0/${import.meta.env.VITE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
+  let searchQuery = '';
+  let sortQuery = `sort[0][field]=${sortField}&sort[0][direction]=${sortDirection}`;
+  if (queryString) {
+    searchQuery = `&filterByFormula=SEARCH(LOWER("${queryString}"),LOWER(+title))`;
+  }
+  return encodeURI(`${url}?${sortQuery}${searchQuery}`);
+}
 
 function App() {
   const [todoList, setTodoList] = useState([]);
@@ -11,12 +22,17 @@ function App() {
     'NetworkError when attempting to fetch resource...Reverting todo...'
   );
 
+  //Sorting/Filtering
+  const [sortField, setSortField] = useState('createdTime');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [queryString, setQueryString] = useState('');
+
   //Updating todos
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const fetchTodos = async () => {
-      const url = `https://api.airtable.com/v0/${import.meta.env.VITE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
+      const url = encodeUrl({ sortField, sortDirection, queryString });
       const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
       setIsLoading(true);
@@ -55,13 +71,13 @@ function App() {
       }
     };
     fetchTodos();
-  }, []);
+  }, [sortField, sortDirection, queryString]);
   //POST request
   //user sees the message that is is saving / can not add again
   //response got back -> got created todo and add it to the array
   //isSubmitting to false
   const onAddTodo = async (newTodo) => {
-    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
+    const url = encodeUrl({ sortField, sortDirection, queryString });
     const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
     //created new task
@@ -116,7 +132,7 @@ function App() {
   };
 
   const updateTodo = async (editedTodo) => {
-    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
+    const url = encodeUrl({ sortField, sortDirection, queryString });
     const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
     const originalTodo = todoList.find((todo) => todo.id === editedTodo.id);
@@ -165,7 +181,7 @@ function App() {
   //send request PATCH with isCompleted- changed
   // if failed request - revert UI to setTodoList
   const completeTodo = async (id) => {
-    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
+    const url = encodeUrl({ sortField, sortDirection, queryString });
     const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
     const originalTodo = todoList.find((todo) => todo.id === id);
@@ -229,6 +245,17 @@ function App() {
         onUpdateTodo={updateTodo}
         isLoading={isLoading}
       />
+
+      <hr />
+      <TodosViewForm
+        sortField={sortField}
+        setSortField={setSortField}
+        sortDirection={sortDirection}
+        setSortDirection={setSortDirection}
+        setQueryString={setQueryString}
+        queryString={queryString}
+      />
+
       {errorMessage && (
         <div>
           <hr />
