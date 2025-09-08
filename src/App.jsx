@@ -18,9 +18,7 @@ function App() {
   const [todoList, setTodoList] = useState([]);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(
-    'NetworkError when attempting to fetch resource...Reverting todo...'
-  );
+  const [errorMessage, setErrorMessage] = useState('');
 
   //Sorting/Filtering
   const [sortField, setSortField] = useState('createdTime');
@@ -47,7 +45,9 @@ function App() {
         const resp = await fetch(url, options);
         //error message if false
         if (!resp.ok) {
-          throw new Error(resp.message);
+          throw new Error(
+            `Request failed with status ${resp.status}: ${resp.statusText}`
+          );
         }
         // getting data and => json format
         const data = await resp.json();
@@ -110,7 +110,9 @@ function App() {
       console.log('Fetch response received:', resp);
       //error
       if (!resp.ok) {
-        throw new Error(resp.message);
+        throw new Error(
+          `Request failed with status ${resp.status}: ${resp.statusText}`
+        );
       }
       //destructure records array from response
       const { records } = await resp.json();
@@ -163,7 +165,9 @@ function App() {
       const resp = await fetch(url, options);
 
       if (!resp.ok) {
-        throw new Error(resp.message);
+        throw new Error(
+          `Request failed with status ${resp.status}: ${resp.statusText}`
+        );
       }
       const updatedTodos = todoList.map((todo) =>
         todo.id === editedTodo.id ? { ...todo, ...editedTodo } : todo
@@ -220,7 +224,9 @@ function App() {
     try {
       const resp = await fetch(url, options);
       if (!resp.ok) {
-        throw new Error(resp.message);
+        throw new Error(
+          `Request failed with status ${resp.status}: ${resp.statusText}`
+        );
       }
     } catch (error) {
       console.error(error);
