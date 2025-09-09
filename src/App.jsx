@@ -2,21 +2,35 @@ import './App.css';
 import TodoList from './features/TodoList/TodoList';
 import TodoForm from './features/TodoForm';
 import { useEffect, useState } from 'react';
+import TodosViewForm from './features/TodosViewForm';
+
+function encodeUrl({ sortField, sortDirection, queryString }) {
+  const url = `https://api.airtable.com/v0/${import.meta.env.VITE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
+  let searchQuery = '';
+  let sortQuery = `sort[0][field]=${sortField}&sort[0][direction]=${sortDirection}`;
+  if (queryString) {
+    searchQuery = `&filterByFormula=SEARCH(LOWER("${queryString}"),LOWER(+title))`;
+  }
+  return encodeURI(`${url}?${sortQuery}${searchQuery}`);
+}
 
 function App() {
   const [todoList, setTodoList] = useState([]);
 
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState(
-    'NetworkError when attempting to fetch resource...Reverting todo...'
-  );
+  const [errorMessage, setErrorMessage] = useState('');
+
+  //Sorting/Filtering
+  const [sortField, setSortField] = useState('createdTime');
+  const [sortDirection, setSortDirection] = useState('desc');
+  const [queryString, setQueryString] = useState('');
 
   //Updating todos
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const fetchTodos = async () => {
-      const url = `https://api.airtable.com/v0/${import.meta.env.VITE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
+      const url = encodeUrl({ sortField, sortDirection, queryString });
       const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
       setIsLoading(true);
@@ -31,7 +45,9 @@ function App() {
         const resp = await fetch(url, options);
         //error message if false
         if (!resp.ok) {
-          throw new Error(resp.message);
+          throw new Error(
+            `Request failed with status ${resp.status}: ${resp.statusText}`
+          );
         }
         // getting data and => json format
         const data = await resp.json();
@@ -55,13 +71,13 @@ function App() {
       }
     };
     fetchTodos();
-  }, []);
+  }, [sortField, sortDirection, queryString]);
   //POST request
   //user sees the message that is is saving / can not add again
   //response got back -> got created todo and add it to the array
   //isSubmitting to false
   const onAddTodo = async (newTodo) => {
-    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
+    const url = encodeUrl({ sortField, sortDirection, queryString });
     const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
     //created new task
@@ -94,7 +110,9 @@ function App() {
       console.log('Fetch response received:', resp);
       //error
       if (!resp.ok) {
-        throw new Error(resp.message);
+        throw new Error(
+          `Request failed with status ${resp.status}: ${resp.statusText}`
+        );
       }
       //destructure records array from response
       const { records } = await resp.json();
@@ -116,7 +134,7 @@ function App() {
   };
 
   const updateTodo = async (editedTodo) => {
-    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
+    const url = encodeUrl({ sortField, sortDirection, queryString });
     const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
     const originalTodo = todoList.find((todo) => todo.id === editedTodo.id);
@@ -147,7 +165,9 @@ function App() {
       const resp = await fetch(url, options);
 
       if (!resp.ok) {
-        throw new Error(resp.message);
+        throw new Error(
+          `Request failed with status ${resp.status}: ${resp.statusText}`
+        );
       }
       const updatedTodos = todoList.map((todo) =>
         todo.id === editedTodo.id ? { ...todo, ...editedTodo } : todo
@@ -165,7 +185,7 @@ function App() {
   //send request PATCH with isCompleted- changed
   // if failed request - revert UI to setTodoList
   const completeTodo = async (id) => {
-    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
+    const url = encodeUrl({ sortField, sortDirection, queryString });
     const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
     const originalTodo = todoList.find((todo) => todo.id === id);
@@ -204,7 +224,9 @@ function App() {
     try {
       const resp = await fetch(url, options);
       if (!resp.ok) {
-        throw new Error(resp.message);
+        throw new Error(
+          `Request failed with status ${resp.status}: ${resp.statusText}`
+        );
       }
     } catch (error) {
       console.error(error);
@@ -229,6 +251,17 @@ function App() {
         onUpdateTodo={updateTodo}
         isLoading={isLoading}
       />
+
+      <hr />
+      <TodosViewForm
+        sortField={sortField}
+        setSortField={setSortField}
+        sortDirection={sortDirection}
+        setSortDirection={setSortDirection}
+        setQueryString={setQueryString}
+        queryString={queryString}
+      />
+
       {errorMessage && (
         <div>
           <hr />
