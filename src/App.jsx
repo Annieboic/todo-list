@@ -3,16 +3,7 @@ import TodoList from './features/TodoList/TodoList';
 import TodoForm from './features/TodoForm';
 import { useEffect, useState } from 'react';
 import TodosViewForm from './features/TodosViewForm';
-
-function encodeUrl({ sortField, sortDirection, queryString }) {
-  const url = `https://api.airtable.com/v0/${import.meta.env.VITE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
-  let searchQuery = '';
-  let sortQuery = `sort[0][field]=${sortField}&sort[0][direction]=${sortDirection}`;
-  if (queryString) {
-    searchQuery = `&filterByFormula=SEARCH(LOWER("${queryString}"),LOWER(+title))`;
-  }
-  return encodeURI(`${url}?${sortQuery}${searchQuery}`);
-}
+import { useCallback } from 'react';
 
 function App() {
   const [todoList, setTodoList] = useState([]);
@@ -28,9 +19,19 @@ function App() {
   //Updating todos
   const [isSaving, setIsSaving] = useState(false);
 
+  const encodeUrl = useCallback(() => {
+    const url = `https://api.airtable.com/v0/${import.meta.env.VITE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
+    let searchQuery = '';
+    let sortQuery = `sort[0][field]=${sortField}&sort[0][direction]=${sortDirection}`;
+    if (queryString) {
+      searchQuery = `&filterByFormula=SEARCH(LOWER("${queryString}"),LOWER(title))`;
+    }
+    return encodeURI(`${url}?${sortQuery}${searchQuery}`);
+  }, [sortField, sortDirection, queryString]);
+
   useEffect(() => {
     const fetchTodos = async () => {
-      const url = encodeUrl({ sortField, sortDirection, queryString });
+      const url = encodeUrl();
       const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
       setIsLoading(true);
@@ -77,7 +78,7 @@ function App() {
   //response got back -> got created todo and add it to the array
   //isSubmitting to false
   const onAddTodo = async (newTodo) => {
-    const url = encodeUrl({ sortField, sortDirection, queryString });
+    const url = encodeUrl();
     const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
     //created new task
@@ -134,7 +135,7 @@ function App() {
   };
 
   const updateTodo = async (editedTodo) => {
-    const url = encodeUrl({ sortField, sortDirection, queryString });
+    const url = encodeUrl();
     const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
     const originalTodo = todoList.find((todo) => todo.id === editedTodo.id);
@@ -185,7 +186,7 @@ function App() {
   //send request PATCH with isCompleted- changed
   // if failed request - revert UI to setTodoList
   const completeTodo = async (id) => {
-    const url = encodeUrl({ sortField, sortDirection, queryString });
+    const url = encodeUrl();
     const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
     const originalTodo = todoList.find((todo) => todo.id === id);
