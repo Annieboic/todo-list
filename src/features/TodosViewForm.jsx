@@ -1,3 +1,20 @@
+import styled from 'styled-components';
+
+const StyledForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+`;
+
+const StyledDiv = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+`;
+
 function TodosViewForm({
   sortField,
   sortDirection,
@@ -11,7 +28,7 @@ function TodosViewForm({
   }
   return (
     <div>
-      <div>
+      <StyledDiv>
         <label htmlFor="">Search todos:</label>
         <input
           type="text"
@@ -19,9 +36,9 @@ function TodosViewForm({
           onChange={(event) => setQueryString(event.target.value)}
         />
         <button onClick={() => setQueryString('')}>Clear</button>
-      </div>
+      </StyledDiv>
 
-      <form onSubmit={preventRefresh}>
+      <StyledForm onSubmit={preventRefresh}>
         <label htmlFor="sortField">Sort by</label>
         <select
           name="sortField"
@@ -43,7 +60,7 @@ function TodosViewForm({
           <option value="asc">Ascending</option>
           <option value="desc">Descending</option>
         </select>
-      </form>
+      </StyledForm>
     </div>
   );
 }

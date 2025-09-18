@@ -1,3 +1,4 @@
+import styles from './App.module.css';
 import './App.css';
 import TodoList from './features/TodoList/TodoList';
 import TodoForm from './features/TodoForm';
@@ -240,17 +241,19 @@ function App() {
   return (
     <div>
       <h1>Todo List</h1>
-      <TodoForm
-        onAddTodo={onAddTodo}
-        isSaving={isSaving}
-        setIsSaving={setIsSaving}
-      />
-      <TodoList
-        todoList={todoList}
-        onCompleteTodo={completeTodo}
-        onUpdateTodo={updateTodo}
-        isLoading={isLoading}
-      />
+      <div className={styles.app}>
+        <TodoForm
+          onAddTodo={onAddTodo}
+          isSaving={isSaving}
+          setIsSaving={setIsSaving}
+        />
+        <TodoList
+          todoList={todoList}
+          onCompleteTodo={completeTodo}
+          onUpdateTodo={updateTodo}
+          isLoading={isLoading}
+        />
+      </div>
 
       <hr />
       <TodosViewForm
@@ -263,7 +266,7 @@ function App() {
       />
 
       {errorMessage && (
-        <div>
+        <div className={styles.errorMessage}>
           <hr />
           <p>{errorMessage}</p>
           <button onClick={() => setErrorMessage('')}>Dismiss</button>

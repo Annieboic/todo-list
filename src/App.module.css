@@ -1,0 +1,15 @@
+/* Center the app in the body. Hint: use flex or grid.
+Create a border on the div containing the error message */
+.app {
+  display: flex;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.errorMessage {
+  border: 1px solid red;
+  padding: 10px;
+  margin: 10px 0;
+  color: red;
+}
