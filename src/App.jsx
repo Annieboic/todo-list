@@ -2,8 +2,14 @@ import styles from './App.module.css';
 import './App.css';
 import TodoList from './features/TodoList/TodoList';
 import TodoForm from './features/TodoForm';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useReducer } from 'react';
 import TodosViewForm from './features/TodosViewForm';
+
+import {
+  reducer as todosReducer,
+  actions as todoActions,
+  initialState as initialTodosState,
+} from './reducers/todos.reducer';
 
 function encodeUrl({ sortField, sortDirection, queryString }) {
   const url = `https://api.airtable.com/v0/${import.meta.env.VITE_BASE_ID}/${import.meta.env.VITE_TABLE_NAME}`;
@@ -16,63 +22,48 @@ function encodeUrl({ sortField, sortDirection, queryString }) {
 }
 
 function App() {
-  const [todoList, setTodoList] = useState([]);
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState('');
+  const [todoState, dispatch] = useReducer(todosReducer, initialTodosState);
 
   //Sorting/Filtering
   const [sortField, setSortField] = useState('createdTime');
   const [sortDirection, setSortDirection] = useState('desc');
   const [queryString, setQueryString] = useState('');
 
-  //Updating todos
-  const [isSaving, setIsSaving] = useState(false);
-
   useEffect(() => {
     const fetchTodos = async () => {
       const url = encodeUrl({ sortField, sortDirection, queryString });
       const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
-      setIsLoading(true);
-
-      const options = {
-        method: 'GET',
-        headers: { Authorization: token },
-      };
+      dispatch({ type: todoActions.fetchTodos });
 
       try {
-        //fetch is called
-        const resp = await fetch(url, options);
-        //error message if false
+        const resp = await fetch(url, {
+          method: 'GET',
+          headers: { Authorization: token },
+        });
+
         if (!resp.ok) {
           throw new Error(
             `Request failed with status ${resp.status}: ${resp.statusText}`
           );
         }
-        // getting data and => json format
-        const data = await resp.json();
-        //extract records array
-        const records = data.records;
-        //map over each record from Airtable
-        const todos = records.map((record) => {
-          const todo = {
-            id: record.id,
-            title: record.fields.title || '',
-            isCompleted: record.fields.isCompleted ? true : false,
-          };
 
-          return todo;
+        const data = await resp.json();
+        dispatch({
+          type: todoActions.loadTodos,
+          records: data.records,
         });
-        setTodoList([...todos]);
       } catch (error) {
-        setErrorMessage(error.message);
-      } finally {
-        setIsLoading(false);
+        dispatch({
+          type: todoActions.setLoadError,
+          error,
+        });
       }
     };
+
     fetchTodos();
   }, [sortField, sortDirection, queryString]);
+
   //POST request
   //user sees the message that is is saving / can not add again
   //response got back -> got created todo and add it to the array
@@ -81,7 +72,6 @@ function App() {
     const url = encodeUrl({ sortField, sortDirection, queryString });
     const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
-    //created new task
     const payload = {
       records: [
         {
@@ -92,45 +82,38 @@ function App() {
         },
       ],
     };
-    const options = {
-      method: 'POST',
-      headers: {
-        Authorization: token,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    };
 
-    //fetch(url, options)
-    console.log('Adding todo:', newTodo);
+    dispatch({ type: todoActions.startRequest });
+
     try {
-      setIsSaving(true);
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
 
-      //network request
-      const resp = await fetch(url, options);
-      console.log('Fetch response received:', resp);
-      //error
       if (!resp.ok) {
         throw new Error(
           `Request failed with status ${resp.status}: ${resp.statusText}`
         );
       }
-      //destructure records array from response
+
       const { records } = await resp.json();
 
-      //extract the new todo from response
-      const savedTodo = {
-        id: records[0].id,
-        ...records[0].fields,
-      };
-      if (!records[0].fields.isCompleted) {
-        savedTodo.isCompleted = false;
-      }
-      setTodoList([...todoList, savedTodo]);
+      dispatch({
+        type: todoActions.addTodo,
+        record: records[0],
+      });
     } catch (error) {
-      setErrorMessage(error.message);
+      dispatch({
+        type: todoActions.setLoadError,
+        error,
+      });
     } finally {
-      setIsSaving(false);
+      dispatch({ type: todoActions.endRequest });
     }
   };
 
@@ -138,7 +121,14 @@ function App() {
     const url = encodeUrl({ sortField, sortDirection, queryString });
     const token = `Bearer ${import.meta.env.VITE_PAT}`;
 
-    const originalTodo = todoList.find((todo) => todo.id === editedTodo.id);
+    const originalTodo = todoState.todoList.find(
+      (todo) => todo.id === editedTodo.id
+    );
+
+    dispatch({
+      type: todoActions.updateTodo,
+      editedTodo,
+    });
 
     const payload = {
       records: [
@@ -152,33 +142,27 @@ function App() {
       ],
     };
 
-    const options = {
-      method: 'PATCH',
-      headers: {
-        Authorization: token,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    };
-
     try {
-      setIsSaving(true);
-      const resp = await fetch(url, options);
+      const resp = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          Authorization: token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
 
       if (!resp.ok) {
         throw new Error(
           `Request failed with status ${resp.status}: ${resp.statusText}`
         );
       }
-      const updatedTodos = todoList.map((todo) =>
-        todo.id === editedTodo.id ? { ...todo, ...editedTodo } : todo
-      );
-      setTodoList(updatedTodos);
     } catch (error) {
-      console.error(error);
-      setErrorMessage(`${error.message}. Reverting todo...`);
-    } finally {
-      setIsSaving(false);
+      dispatch({
+        type: todoActions.revertTodo,
+        editedTodo: originalTodo,
+        error,
+      });
     }
   };
 
@@ -188,53 +172,46 @@ function App() {
   const completeTodo = async (id) => {
     const url = encodeUrl({ sortField, sortDirection, queryString });
     const token = `Bearer ${import.meta.env.VITE_PAT}`;
+    const originalTodo = todoState.todoList.find((todo) => todo.id === id);
 
-    const originalTodo = todoList.find((todo) => todo.id === id);
-
-    const updatedCompletedTrue = { ...originalTodo, isCompleted: true };
-
-    //update UI todo
-
-    const updated = todoList.map((todo) =>
-      todo.id === id ? updatedCompletedTrue : todo
-    );
-
-    setTodoList(updated);
+    dispatch({
+      type: todoActions.completeTodo,
+      id,
+    });
 
     const payload = {
       records: [
         {
-          id: updatedCompletedTrue.id,
+          id: id,
           fields: {
-            title: updatedCompletedTrue.title,
-            isCompleted: updatedCompletedTrue.isCompleted,
+            title: originalTodo.title,
+            isCompleted: true,
           },
         },
       ],
     };
 
-    const options = {
-      method: 'PATCH',
-      headers: {
-        Authorization: token,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    };
-
     try {
-      const resp = await fetch(url, options);
+      const resp = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          Authorization: token,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
       if (!resp.ok) {
         throw new Error(
           `Request failed with status ${resp.status}: ${resp.statusText}`
         );
       }
     } catch (error) {
-      console.error(error);
-      setErrorMessage(`${error.message}. Reverting todo...`);
-      setTodoList((prevTodos) =>
-        prevTodos.map((todo) => (todo.id === id ? originalTodo : todo))
-      );
+      dispatch({
+        type: todoActions.revertTodo,
+        editedTodo: originalTodo,
+        error,
+      });
     }
   };
 
@@ -242,16 +219,13 @@ function App() {
     <div>
       <h1>Todo List</h1>
       <div className={styles.app}>
-        <TodoForm
-          onAddTodo={onAddTodo}
-          isSaving={isSaving}
-          setIsSaving={setIsSaving}
-        />
+        <TodoForm onAddTodo={onAddTodo} isSaving={todoState.isSaving} />
+
         <TodoList
-          todoList={todoList}
+          todoList={todoState.todoList}
           onCompleteTodo={completeTodo}
           onUpdateTodo={updateTodo}
-          isLoading={isLoading}
+          isLoading={todoState.isLoading}
         />
       </div>
 
@@ -265,11 +239,13 @@ function App() {
         queryString={queryString}
       />
 
-      {errorMessage && (
+      {todoState.errorMessage && (
         <div className={styles.errorMessage}>
           <hr />
-          <p>{errorMessage}</p>
-          <button onClick={() => setErrorMessage('')}>Dismiss</button>
+          <p>{todoState.errorMessage}</p>
+          <button onClick={() => dispatch({ type: todoActions.clearError })}>
+            Dismiss
+          </button>
         </div>
       )}
     </div>
