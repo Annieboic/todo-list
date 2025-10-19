@@ -29,8 +29,10 @@ function TodosPage({
 
   const indexOfFirstTodo = (currentPage - 1) * itemsPerPage;
 
-  const filteredTodoList = todoState.todoList.filter((todo) =>
-    todo.title.toLowerCase().includes(queryString.toLowerCase())
+  const filteredTodoList = todoState.todoList.filter(
+    (todo) =>
+      !todo.isCompleted &&
+      todo.title.toLowerCase().includes(queryString.toLowerCase())
   );
 
   const totalPages = Math.ceil(filteredTodoList.length / itemsPerPage);
