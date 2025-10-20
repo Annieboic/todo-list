@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-const Wrapper = styled.form`
+const Wrapper = styled.div`
   padding: 10px;
 `;
 
